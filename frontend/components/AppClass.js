@@ -1,49 +1,146 @@
 import React from 'react'
 
+import axios from 'axios'
+
 export default class AppClass extends React.Component {
   state = {
-    id: '',
     totalMoves: 0,
-    index:4,
     Y: 2,
     X: 2,
-    board: ['', '', '','', '', '','', '', ''],
-    value: 'B'
+    board: ['', '', '','', 'B', '','', '', ''],
+    value: '',
+    message: ''
   }
-  // componentDidMount() {
-  //   this.setState({
-  //     ...this.state,
-  //     Y: 
-  //     X: 
-  //   })
-  // }
+ 
 
+  handleBoard = (X, Y) => {
+    if (X === 1 && Y === 1) {
+      return ['B', '', '', '', '', '', '', '', '']
+    }
+    if (X === 2 && Y === 1) {
+      return ['', 'B', '', '', '', '', '', '', '']
+    }
+     if (X === 3 && Y === 1) {
+      return ['', '', 'B', '', '', '', '', '', '']
+    }
+    if (X === 1 && Y === 2) {
+      return ['', '', '', 'B', '', '', '', '', '']
+    }
+    if (X === 2 && Y === 2) {
+      return ['', '', '', '', 'B', '', '', '', '']
+    }
+    if (X === 3 && Y === 2) {
+      return ['', '', '', '', '', 'B', '', '', '']
+    }
+    if (X === 1 && Y === 3) {
+      return ['', '', '', '', '', '', 'B', '', '']
+    }
+    if (X === 2 && Y === 3) {
+      return ['', '', '', '', '', '', '', 'B', '']
+    }
+    if (X === 3 && Y === 3) {
+      return ['', '', '', '', '', '', '', '', 'B']
+    }
+  }
   
-  handleClick = (e) => {
+  handleUp = () => {
+    if (this.state.Y === 1) {
+      this.setState({...this.state, 
+        Y: 1, 
+        message: "You can't go up",
+        board: this.handleBoard(this.state.X, this.state.Y)
+      });
+    } else{
 
-    
-    if (this.state.index > this.state.board.length || this.state.index <0){
-      console.log('FIX THIS')
-      this.setState
-    } else {
-      
-     
-      
-      this.setState({
-        ...this.state,
-        id: e.target.id,
-        index: this.state.id==="left" ? this.state.index-1: this.state.id==="right" ? this.state.index+1: this.state.id==='up' ? this.state.index-3: this.state.id==='down' ? this.state.index+3: this.state.index,
-        Y: Math.floor(this.state.index/3) + 1,
-        X: Math.floor(this.state.index% (3*(this.state.Y-1)))+1,
-        totalMoves: this.state.totalMoves + 1,
-       // board: ['', '', '','', '', '','', '', '']
-      })
+    this.setState({...this.state, 
+      Y: this.state.Y - 1,  
+      totalMoves: this.state.totalMoves +1, 
+      message: '',
+      board: this.handleBoard(this.state.X, this.state.Y -1)
+      });
     }
     
-    console.log(this.state.index, e.target.id)
   }
   
- 
+  handleDown= () => {
+
+    if (this.state.Y === 3) {
+      this.setState({...this.state, 
+        Y: 3,  
+        message: "You can't go down",
+        board: this.handleBoard(this.state.X, this.state.Y)
+      });
+    } else{
+
+    this.setState({...this.state, 
+      Y: this.state.Y + 1,  
+      totalMoves: this.state.totalMoves +1, 
+      message: '',
+      board: this.handleBoard(this.state.X, this.state.Y +1)
+    });
+  }
+}
+
+  handleRight = () => {
+    if(this.state.X === 3) {
+      this.setState({...this.state, 
+        X: 3,  
+        message: "You can't go right",
+        board: this.handleBoard(this.state.X, this.state.Y)
+      });
+    }else{
+      this.setState({...this.setState, 
+        X: this.state.X + 1,  
+        totalMoves: this.state.totalMoves +1, 
+        message: '',
+        board: this.handleBoard(this.state.X +1, this.state.Y)
+      })
+    }
+  }
+
+  handleLeft = () => {
+    if(this.state.X === 1) {
+      this.setState({...this.state, 
+        X: 1,  
+        message: "You can't go left",
+        board: this.handleBoard(this.state.X, this.state.Y)});
+    }else{
+      this.setState({...this.setState, 
+        X: this.state.X - 1, 
+        totalMoves: this.state.totalMoves +1,
+        message: '',
+        board: this.handleBoard(this.state.X -1, this.state.Y)
+      })
+    }
+  }
+
+  handleReset = () => {
+    this.setState({
+      X: 2,
+      Y: 2,
+      message: '',
+      totalMoves: 0,
+      board: ['', '', '', '', 'B', '', '', '', ''],
+      value: ''
+    })
+  }
+
+  handleChanges = (evt) => {
+    this.setState({...this.state, value: evt.target.value });
+  }
+
+  onSubmit = (evt) => {
+    evt.preventDefault();
+    const email =this.state.value;
+    axios.post(`http://localhost:9000/api/result`, {x: this.state.X, y: this.state.Y, steps: this.state.totalMoves, email: email})
+    .then(res => {
+      this.setState({...this.state, message: res.data.message, value: ''});
+    })
+    .catch(err => {
+     console.log(err.message)
+     this.setState({...this.state, message: err.response.data.message})
+    })
+  }
 
   render() {
     const { className } = this.props
@@ -51,35 +148,38 @@ export default class AppClass extends React.Component {
       <div id="wrapper" className={className}>
         <div className="info">
           <h3 id="coordinates">Coordinates ({this.state.X}, {this.state.Y})</h3>
-          <h3 id="steps">{this.state.totalMoves}</h3>
+          <h3 id="steps">You moved {this.state.totalMoves} time{this.state.totalMoves === 1 ? '' : "s"}</h3>
         </div>
         <div id="grid">
-        {this.state.board.map((val, idx) =>{
-          if(idx === this.state.index){
-            return <div key={idx} className="square active">{this.state.value}</div>
-          } else {
-            return <div key={idx} className="square"></div>
-
-          }
-        })}
-          
+          {this.state.board.map((item, idx) => {
+            if (item === 'B') {
+              return (<div key = {idx} className = 'square active'>{item}</div>)
+            } else {
+            return (
+              <div key = {idx} className="square">{item}</div>
+            )}
+          })}
         </div>
         <div className="info">
-          <h3 id="message"></h3>
+          <h3 id="message">{this.state.message}</h3>
         </div>
         <div id="keypad">
-          <button id="left" onClick={(id)=> this.handleClick(id)  }  >LEFT</button>
-          <button id="up" onClick={(id)=> this.handleClick(id)}>UP</button>
-          <button id="right" onClick={(id)=> this.handleClick(id)}>RIGHT</button>
-          <button id="down" onClick={(id)=> this.handleClick(id)}>DOWN</button>
-          <button id="reset" onClick={()=> console.log('RESET', this.state.index)}>reset</button>
+          <button id="left" onClick={this.handleLeft}>LEFT</button>
+          <button id="up" onClick={this.handleUp}>UP</button>
+          <button id="right" onClick={this.handleRight}>RIGHT</button>
+          <button id="down" onClick={this.handleDown}>DOWN</button>
+          <button id="reset" onClick={this.handleReset}>reset</button>
         </div>
-        <form>
-          <input id="email" type="email" placeholder="type email"></input>
+        <form onSubmit = {this.onSubmit}>
+          <input 
+            id="email" 
+            type="email" 
+            placeholder="type email" 
+            onChange={this.handleChanges}
+            value={this.state.value}></input>
           <input id="submit" type="submit"></input>
         </form>
       </div>
     )
   }
 }
-
